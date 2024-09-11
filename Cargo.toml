@@ -1,6 +1,10 @@
 [package]
 name = "dynisland-macro"
+authors = ["cr3eperall"]
+description = "Procedural macros for dynisland-core"
+license = "MIT"
 version = "0.1.0"
+repository = "https://github.com/cr3eperall/dynisland-macro"
 edition = "2021"
 
 [lib]
