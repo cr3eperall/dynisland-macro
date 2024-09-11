@@ -3,12 +3,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, PartialEq, Serialize, MultiWidgetConfig, OptDeserializeConfig, Debug)]
 pub struct TestConfig {
+    #[serde(skip_serializing)]
     pub(crate) scrolling: bool,
+    #[serde(skip_serializing)]
     pub(crate) scrolling_speed: f32,
+    #[serde(skip_serializing)]
     pub max_width: i32,
+    #[serde(skip_serializing)]
     pub(crate) minimal_image: String,
     #[child_only]
     pub(crate) exec: String,
+    #[serde(skip_serializing)]
     #[deserialize_struct(DeWinPos)]
     pub(crate) win_pos: WinPos,
 }
@@ -24,6 +29,10 @@ impl Default for TestConfig {
         }
     }
 }
+
+#[derive(Clone, PartialEq, Serialize, MultiWidgetConfig, OptDeserializeConfig, Debug, Default)]
+pub struct Empty{}
+
 #[derive(Debug, PartialEq, Clone, Default, Deserialize, Serialize, OptDeserializeConfig)]
 pub struct WinPos {
     pub(crate) layer: u64,
@@ -94,4 +103,12 @@ fn test_parse_serde_full() {
     let test_main = test_opt.into_main_config();
     assert_eq!(test, test_main.get_for_window("window", 0));
     assert_eq!(test1, test_main.get_for_window("window2", 0));
+}
+
+#[test]
+fn test_serialize_default() {
+    let mut conf = TestConfigMain::default();
+    conf.windows.insert("".to_string(), vec![TestConfig::default()]);
+    let expected = r#"{"scrolling":true,"scrolling_speed":30.0,"max_width":300,"minimal_image":"image-missing-symbolic","win_pos":{"layer":0},"windows":{"":[{"exec":"test"}]}}"#;
+    assert_eq!(expected, serde_json::to_string(&conf).unwrap());
 }

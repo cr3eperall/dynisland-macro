@@ -31,7 +31,22 @@ pub fn derive_multi_widget_config_main(input: DeriveInput) -> proc_macro2::Token
             } = field;
             let attrs = attrs
                 .iter()
-                .filter(|attr| !attr.path().is_ident("deserialize_struct"));
+                .filter(|attr| !attr.path().is_ident("deserialize_struct"))
+                .filter(|attr| {
+                    if attr.path().is_ident("serde") {
+                        let skip_ser = attr
+                            .parse_nested_meta(|attr| {
+                                if attr.path.is_ident("skip_serializing") {
+                                    Err(attr.error("skip_ser"))
+                                } else {
+                                    Ok(())
+                                }
+                            })
+                            .is_err();
+                        return !skip_ser;
+                    }
+                    true
+                });
             main_fields_ident.push(ident.clone().unwrap());
             let field = quote! {
                 #(#attrs)*
@@ -44,7 +59,7 @@ pub fn derive_multi_widget_config_main(input: DeriveInput) -> proc_macro2::Token
     let mut config_main_struct = quote! {
         #[derive(Debug, Clone, serde::Serialize)]
         #vis struct #ident_main {
-            #(#main_fields),*,
+            #(#main_fields,)*
             pub(crate) windows: ::std::collections::HashMap<String, Vec<#ident>>
         }
     };
@@ -72,7 +87,7 @@ pub fn derive_multi_widget_config_main(input: DeriveInput) -> proc_macro2::Token
                 // map.insert("".to_string(), vec![#ident::default()]);
                 let child_default = #ident::default();
                 Self {
-                    #(#main_fields_ident: child_default.#main_fields_ident),*,
+                    #(#main_fields_ident: child_default.#main_fields_ident,)*
                     windows: map,
                 }
             }
@@ -117,7 +132,7 @@ pub fn derive_config_de(input: DeriveInput) -> proc_macro2::TokenStream {
             });
             let field = quote! {
                 #(#attrs)*
-                #ident #colon_token ::std::option::Option<#ty>
+                pub(crate) #ident #colon_token ::std::option::Option<#ty>
             };
             if deserialize_attr.is_some() {
                 opt_de_struct.insert(ident.clone().unwrap(), field);
