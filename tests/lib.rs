@@ -31,7 +31,7 @@ impl Default for TestConfig {
 }
 
 #[derive(Clone, PartialEq, Serialize, MultiWidgetConfig, OptDeserializeConfig, Debug, Default)]
-pub struct Empty{}
+pub struct Empty {}
 
 #[derive(Debug, PartialEq, Clone, Default, Deserialize, Serialize, OptDeserializeConfig)]
 pub struct WinPos {
@@ -108,7 +108,8 @@ fn test_parse_serde_full() {
 #[test]
 fn test_serialize_default() {
     let mut conf = TestConfigMain::default();
-    conf.windows.insert("".to_string(), vec![TestConfig::default()]);
+    conf.windows
+        .insert("".to_string(), vec![TestConfig::default()]);
     let expected = r#"{"scrolling":true,"scrolling_speed":30.0,"max_width":300,"minimal_image":"image-missing-symbolic","win_pos":{"layer":0},"windows":{"":[{"exec":"test"}]}}"#;
     assert_eq!(expected, serde_json::to_string(&conf).unwrap());
 }
